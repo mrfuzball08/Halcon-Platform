@@ -1,0 +1,1 @@
+FROM microsoft/dotnet:10.0 AS build
