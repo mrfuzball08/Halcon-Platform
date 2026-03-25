@@ -67,7 +67,7 @@ export default function OrderDetailPage({
         setOrder(updated);
       }
       setIsEditing(false);
-    } catch (err) {
+    } catch {
       alert("Failed to update order");
     } finally {
       setIsSubmitting(false);

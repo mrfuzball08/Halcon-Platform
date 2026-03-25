@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { Logo } from "@/components/ui/Logo";
 
@@ -123,9 +124,9 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div className="text-center mt-6">
-          <a href="/" className="text-[12px] text-text-muted hover:text-accent-400 transition-colors">
+          <Link href="/" className="text-[12px] text-text-muted hover:text-accent-400 transition-colors">
             Track an order (public portal) &rarr;
-          </a>
+          </Link>
         </div>
       </div>
     </div>
