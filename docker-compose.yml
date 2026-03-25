@@ -1,0 +1,39 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://api:5000/api
+      - NEXT_PUBLIC_MOCK_AUTH=true
+    depends_on: []
+    # Future: uncomment when .NET API is ready
+    # depends_on:
+    #   - api
+    #
+    # api:
+    #   build:
+    #     context: ./backend
+    #     dockerfile: Dockerfile
+    #   ports:
+    #     - "5000:5000"
+    #   environment:
+    #     - ConnectionStrings__Default=Host=db;Database=halcon;Username=postgres;Password=postgres
+    #   depends_on:
+    #     - db
+    #
+    # db:
+    #   image: postgres:16-alpine
+    #   environment:
+    #     POSTGRES_USER: postgres
+    #     POSTGRES_PASSWORD: postgres
+    #     POSTGRES_DB: halcon
+    #   ports:
+    #     - "5432:5432"
+    #   volumes:
+    #     - pgdata:/var/lib/postgresql/data
+    #
+    # volumes:
+    #   pgdata:

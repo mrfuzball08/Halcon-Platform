@@ -1,0 +1,7 @@
+<svg width="600" height="400" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+  <rect width="600" height="400" fill="#212121" />
+  <rect x="260" y="140" width="80" height="80" rx="10" fill="#10a37f" />
+  <path d="M285 180 L295 190 L315 165" stroke="#171717" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  <text x="300" y="260" font-family="sans-serif" font-size="24" fill="#ECECEC" text-anchor="middle" font-weight="bold">Mock Delivery Photo</text>
+  <text x="300" y="290" font-family="sans-serif" font-size="14" fill="#777777" text-anchor="middle">Material left at delivery address</text>
+</svg>

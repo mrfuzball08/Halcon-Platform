@@ -1,0 +1,130 @@
+// ============================================================
+// Halcon Platform — Mock Data
+// ============================================================
+// Provides fake data for UI development when NEXT_PUBLIC_MOCK_AUTH=true.
+// This file is ONLY used in mock mode and can be safely deleted
+// once the .NET backend is connected.
+// ============================================================
+
+import type { Order, User } from "./types";
+
+export const MOCK_ORDERS: Order[] = [
+  {
+    id: 1,
+    invoiceNumber: "INV-001",
+    customerNumber: "CUST-100",
+    customerName: "Constructora del Norte S.A.",
+    fiscalData: "RFC: CDN010101AAA\nDomicilio fiscal: Av. Industria 1234, Monterrey, NL",
+    deliveryAddress: "Av. Constitución #500, Col. Centro, Monterrey, NL 64000",
+    notes: "Entregar en horario de 8am a 2pm. Preguntar por Ing. Garcia.",
+    status: "ORDERED",
+    createdAt: "2026-03-20T09:00:00Z",
+    updatedAt: "2026-03-20T09:00:00Z",
+    isDeleted: false,
+    loadingPhotoUrl: null,
+    deliveryPhotoUrl: null,
+  },
+  {
+    id: 2,
+    invoiceNumber: "INV-002",
+    customerNumber: "CUST-101",
+    customerName: "Materiales y Acabados Express",
+    fiscalData: "RFC: MAE020202BBB\nDomicilio fiscal: Blvd. Reforma 567, CDMX",
+    deliveryAddress: "Calle Hidalgo #123, Col. Juárez, CDMX 06600",
+    notes: "Material frágil, manejar con cuidado.",
+    status: "IN_PROCESS",
+    createdAt: "2026-03-19T14:30:00Z",
+    updatedAt: "2026-03-20T10:15:00Z",
+    isDeleted: false,
+    loadingPhotoUrl: null,
+    deliveryPhotoUrl: null,
+  },
+  {
+    id: 3,
+    invoiceNumber: "INV-003",
+    customerNumber: "CUST-102",
+    customerName: "Grupo Constructor Halcón",
+    fiscalData: "RFC: GCH030303CCC\nDomicilio fiscal: Av. Chapultepec 890, GDL",
+    deliveryAddress: "Periférico Sur #4500, Col. Jardines, Guadalajara, JAL 44500",
+    notes: "Dejar en almacén trasero.",
+    status: "IN_ROUTE",
+    createdAt: "2026-03-18T08:00:00Z",
+    updatedAt: "2026-03-20T07:00:00Z",
+    isDeleted: false,
+    loadingPhotoUrl: "/mock/loading-example.svg",
+    deliveryPhotoUrl: null,
+  },
+  {
+    id: 4,
+    invoiceNumber: "INV-004",
+    customerNumber: "CUST-103",
+    customerName: "Ferretería El Tornillo Dorado",
+    fiscalData: "RFC: FTD040404DDD\nDomicilio fiscal: Calle Morelos 321, Puebla",
+    deliveryAddress: "Av. 5 de Mayo #789, Col. Centro, Puebla, PUE 72000",
+    notes: "Pedido urgente. Cliente VIP.",
+    status: "DELIVERED",
+    createdAt: "2026-03-15T11:00:00Z",
+    updatedAt: "2026-03-17T16:30:00Z",
+    isDeleted: false,
+    loadingPhotoUrl: "/mock/loading-example.svg",
+    deliveryPhotoUrl: "/mock/delivery-example.svg",
+  },
+  {
+    id: 5,
+    invoiceNumber: "INV-005",
+    customerNumber: "CUST-104",
+    customerName: "Aceros Industriales del Bajío",
+    fiscalData: "RFC: AIB050505EEE\nDomicilio fiscal: Blvd. López Mateos 1500, León",
+    deliveryAddress: "Parque Industrial León, Nave 12, León, GTO 37300",
+    notes: "Requiere grúa para descarga.",
+    status: "ORDERED",
+    createdAt: "2026-03-21T07:30:00Z",
+    updatedAt: "2026-03-21T07:30:00Z",
+    isDeleted: false,
+    loadingPhotoUrl: null,
+    deliveryPhotoUrl: null,
+  },
+  {
+    id: 6,
+    invoiceNumber: "INV-006",
+    customerNumber: "CUST-100",
+    customerName: "Constructora del Norte S.A.",
+    fiscalData: "RFC: CDN010101AAA\nDomicilio fiscal: Av. Industria 1234, Monterrey, NL",
+    deliveryAddress: "Carr. Nacional Km 42, Nuevo León",
+    notes: "Segunda entrega del mes.",
+    status: "IN_PROCESS",
+    createdAt: "2026-03-22T13:00:00Z",
+    updatedAt: "2026-03-23T08:00:00Z",
+    isDeleted: false,
+    loadingPhotoUrl: null,
+    deliveryPhotoUrl: null,
+  },
+];
+
+export const MOCK_DELETED_ORDERS: Order[] = [
+  {
+    id: 7,
+    invoiceNumber: "INV-007",
+    customerNumber: "CUST-105",
+    customerName: "Cementos del Pacífico",
+    fiscalData: "RFC: CDP060606FFF",
+    deliveryAddress: "Puerto Industrial, Manzanillo, COL",
+    notes: "Pedido cancelado por el cliente.",
+    status: "ORDERED",
+    createdAt: "2026-03-10T09:00:00Z",
+    updatedAt: "2026-03-12T11:00:00Z",
+    isDeleted: true,
+    loadingPhotoUrl: null,
+    deliveryPhotoUrl: null,
+  },
+];
+
+export const MOCK_USERS: User[] = [
+  { id: 1, username: "admin", role: "ADMIN" },
+  { id: 2, username: "carlos.ventas", role: "SALES" },
+  { id: 3, username: "maria.compras", role: "PURCHASING" },
+  { id: 4, username: "pedro.almacen", role: "WAREHOUSE" },
+  { id: 5, username: "ana.ruta", role: "ROUTE" },
+  { id: 6, username: "laura.ventas", role: "SALES" },
+  { id: 7, username: "jorge.almacen", role: "WAREHOUSE" },
+];
