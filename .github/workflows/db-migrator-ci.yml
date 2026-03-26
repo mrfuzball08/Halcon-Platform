@@ -1,0 +1,47 @@
+name: Database Migrator CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "**"
+    paths:
+      - "backend/backend.Migrations/**"
+      - ".github/workflows/db-migrator-ci.yml"
+  pull_request:
+    branches:
+      - "**"
+    paths:
+      - "backend/backend.Migrations/**"
+      - ".github/workflows/db-migrator-ci.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build Migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend/backend.Migrations
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore backend.Migrations.csproj
+
+      - name: Verify formatting
+        run: dotnet format backend.Migrations.csproj --verify-no-changes --verbosity minimal
+
+      - name: Build
+        run: dotnet build backend.Migrations.csproj --no-restore --configuration Release -warnaserror -p:ContinuousIntegrationBuild=true
