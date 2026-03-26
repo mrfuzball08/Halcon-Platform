@@ -1,7 +1,6 @@
 public sealed class UsersService(
     IUsersRepository usersRepository,
-    ISupabaseAuthGateway supabaseAuthGateway,
-    ApplicationOptions applicationOptions) : IUsersService
+    ISupabaseAuthGateway supabaseAuthGateway) : IUsersService
 {
     public async Task<List<UserResponse>> ListAsync(CancellationToken cancellationToken = default)
     {
@@ -22,12 +21,14 @@ public sealed class UsersService(
 
     public async Task<UserResponse> CreateAsync(UserCreateRequest request, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
+        if (string.IsNullOrWhiteSpace(request.Username)
+            || string.IsNullOrWhiteSpace(request.Email)
+            || string.IsNullOrWhiteSpace(request.Password))
         {
-            throw new ApiException("Username and password are required.", StatusCodes.Status400BadRequest);
+            throw new ApiException("Username, email, and password are required.", StatusCodes.Status400BadRequest);
         }
 
-        var resolvedEmail = ResolveEmail(request.Username, request.Email);
+        var resolvedEmail = request.Email.Trim();
 
         if (!DomainValidation.IsValidRole(request.Role))
         {
@@ -155,20 +156,16 @@ public sealed class UsersService(
         await supabaseAuthGateway.DeleteUserAsync(user.AuthUserId);
 
         var deleted = await usersRepository.DeleteAsync(id, cancellationToken);
-        if (!deleted)
+        if (deleted)
         {
-            throw new ApiException("User not found.", StatusCodes.Status404NotFound);
-        }
-    }
-
-    private string ResolveEmail(string username, string? requestedEmail)
-    {
-        if (!string.IsNullOrWhiteSpace(requestedEmail))
-        {
-            return requestedEmail.Trim();
+            return;
         }
 
-        var normalized = username.Trim().ToLowerInvariant().Replace(" ", ".");
-        return $"{normalized}@{applicationOptions.DefaultUserEmailDomain}";
+        // Supabase auth delete can cascade and remove profile row before repository delete runs.
+        var profileStillExists = await usersRepository.GetByIdAsync(id, cancellationToken);
+        if (profileStillExists is not null)
+        {
+            throw new ApiException("User deletion failed.", StatusCodes.Status500InternalServerError);
+        }
     }
 }
