@@ -10,7 +10,7 @@ public sealed class ImagesRepository(AppDbContext dbContext, SupabaseAppOptions 
             new Supabase.Storage.FileOptions
             {
                 ContentType = contentType,
-                Upsert = true,
+                Upsert = false,
                 CacheControl = "3600"
             });
 

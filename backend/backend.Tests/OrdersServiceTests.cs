@@ -113,6 +113,18 @@ public sealed class OrdersServiceTests
         Assert.Null(repository.UpdatedOrder);
     }
 
+    [Fact]
+    public async Task ListAsync_WhenDateFormatIsInvalid_ThrowsBadRequest()
+    {
+        var repository = new FakeOrdersRepository();
+        var service = new OrdersService(repository);
+
+        var exception = await Assert.ThrowsAsync<ApiException>(() =>
+            service.ListAsync(null, null, "03-26-2026", null, false));
+
+        Assert.Equal(400, exception.StatusCode);
+    }
+
     private sealed class FakeOrdersRepository : IOrdersRepository
     {
         public Order? GetByIdResult { get; set; }
@@ -135,7 +147,7 @@ public sealed class OrdersServiceTests
             return Task.FromResult(GetByInvoiceResult);
         }
 
-        public Task<List<Order>> ListAsync(string? invoice, string? customer, string? date, string? status, bool includeDeleted, CancellationToken cancellationToken = default)
+        public Task<List<Order>> ListAsync(string? invoice, string? customer, string? date, string? status, bool deletedOnly, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(ListResult);
         }

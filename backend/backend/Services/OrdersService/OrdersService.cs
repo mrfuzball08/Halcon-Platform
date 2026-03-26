@@ -1,13 +1,26 @@
+using System.Globalization;
+
 public sealed class OrdersService(IOrdersRepository ordersRepository) : IOrdersService
 {
-    public async Task<List<OrderResponse>> ListAsync(string? invoice, string? customer, string? date, string? status, bool includeDeleted, CancellationToken cancellationToken = default)
+    public async Task<List<OrderResponse>> ListAsync(string? invoice, string? customer, string? date, string? status, bool deletedOnly, CancellationToken cancellationToken = default)
     {
         if (!string.IsNullOrWhiteSpace(status) && !DomainValidation.IsValidStatus(status))
         {
             throw new ApiException("Status filter is invalid.", StatusCodes.Status400BadRequest);
         }
 
-        var orders = await ordersRepository.ListAsync(invoice, customer, date, status, includeDeleted, cancellationToken);
+        string? normalizedDate = null;
+        if (!string.IsNullOrWhiteSpace(date))
+        {
+            if (!DateOnly.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
+            {
+                throw new ApiException("Date filter must use yyyy-MM-dd format.", StatusCodes.Status400BadRequest);
+            }
+
+            normalizedDate = parsedDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        }
+
+        var orders = await ordersRepository.ListAsync(invoice, customer, normalizedDate, status, deletedOnly, cancellationToken);
         return orders.Select(x => x.ToResponse()).ToList();
     }
 

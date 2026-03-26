@@ -8,13 +8,13 @@ public sealed class OrdersRepository(AppDbContext dbContext) : IOrdersRepository
         string? customer,
         string? date,
         string? status,
-        bool includeDeleted,
+        bool deletedOnly,
         CancellationToken cancellationToken = default)
     {
         IPostgrestTable<Order> query = dbContext.Client
             .From<Order>()
             .Order("created_at", Constants.Ordering.Descending)
-            .Filter("is_deleted", Constants.Operator.Equals, includeDeleted);
+            .Filter("is_deleted", Constants.Operator.Equals, deletedOnly);
 
         if (!string.IsNullOrWhiteSpace(invoice))
         {

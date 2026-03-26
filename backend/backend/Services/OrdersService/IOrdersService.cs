@@ -1,6 +1,6 @@
 public interface IOrdersService
 {
-    Task<List<OrderResponse>> ListAsync(string? invoice, string? customer, string? date, string? status, bool includeDeleted, CancellationToken cancellationToken = default);
+    Task<List<OrderResponse>> ListAsync(string? invoice, string? customer, string? date, string? status, bool deletedOnly, CancellationToken cancellationToken = default);
     Task<OrderResponse> GetAsync(int id, CancellationToken cancellationToken = default);
     Task<OrderResponse> CreateAsync(OrderCreateRequest request, CancellationToken cancellationToken = default);
     Task<OrderResponse> UpdateAsync(int id, OrderUpdateRequest request, CancellationToken cancellationToken = default);

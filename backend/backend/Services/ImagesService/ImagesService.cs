@@ -2,6 +2,8 @@ public sealed class ImagesService(
     IImagesRepository imagesRepository,
     IOrdersService ordersService) : IImagesService
 {
+    private const long MaxUploadBytes = 10 * 1024 * 1024;
+
     public async Task<OrderResponse> UploadLoadingPhotoAsync(int orderId, IFormFile file, CancellationToken cancellationToken = default)
     {
         var photoUrl = await UploadAsync(orderId, file, "loading", cancellationToken);
@@ -21,6 +23,11 @@ public sealed class ImagesService(
             throw new ApiException("File is empty.", StatusCodes.Status400BadRequest);
         }
 
+        if (file.Length > MaxUploadBytes)
+        {
+            throw new ApiException("File exceeds the 10 MB limit.", StatusCodes.Status413PayloadTooLarge);
+        }
+
         if (!file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
         {
             throw new ApiException("Only image files are allowed.", StatusCodes.Status400BadRequest);
@@ -31,8 +38,8 @@ public sealed class ImagesService(
         await stream.CopyToAsync(memory, cancellationToken);
 
         var extension = Path.GetExtension(file.FileName);
-        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        var path = $"orders/{orderId}/{type}_{timestamp}{extension}";
+        var uniqueSuffix = $"{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}_{Guid.NewGuid():N}";
+        var path = $"orders/{orderId}/{type}_{uniqueSuffix}{extension}";
 
         return await imagesRepository.UploadAsync(memory.ToArray(), path, file.ContentType, cancellationToken);
     }

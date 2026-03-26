@@ -15,14 +15,14 @@ public sealed class OrdersController(IOrdersService ordersService, IImagesServic
         [FromQuery] string? status,
         CancellationToken cancellationToken)
     {
-        return Ok(await ordersService.ListAsync(invoice, customer, date, status, includeDeleted: false, cancellationToken));
+        return Ok(await ordersService.ListAsync(invoice, customer, date, status, deletedOnly: false, cancellationToken));
     }
 
     [HttpGet("deleted")]
     [Authorize(Roles = nameof(UserRole.ADMIN))]
     public async Task<ActionResult<List<OrderResponse>>> ListDeleted(CancellationToken cancellationToken)
     {
-        return Ok(await ordersService.ListAsync(null, null, null, null, includeDeleted: true, cancellationToken));
+        return Ok(await ordersService.ListAsync(null, null, null, null, deletedOnly: true, cancellationToken));
     }
 
     [HttpGet("{id:int}")]
