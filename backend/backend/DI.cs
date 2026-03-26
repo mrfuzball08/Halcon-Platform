@@ -3,10 +3,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 public static class DependencyInjection
 {
-    public static void ConfigureServices(this IServiceCollection services, IConfiguration configuration)
+    public static void ConfigureServices(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment)
     {
         var supabaseOptions = configuration.ToSupabaseOptions();
-        var appOptions = configuration.ToApplicationOptions();
+        var appOptions = configuration.ToApplicationOptions(environment.IsDevelopment());
 
         services.AddSingleton(supabaseOptions);
         services.AddSingleton(appOptions);
@@ -29,7 +29,7 @@ public static class DependencyInjection
             .AddJwtBearer(options =>
             {
                 options.Authority = supabaseOptions.AuthUrl;
-                options.RequireHttpsMetadata = false;
+                options.RequireHttpsMetadata = !environment.IsDevelopment();
                 options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
                 {
                     ValidateIssuer = true,

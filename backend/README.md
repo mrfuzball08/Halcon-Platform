@@ -23,6 +23,38 @@ The Backend API is the main application entry point for business operations. It 
 - Evidence image handling for loading and delivery stages.
 - Global API error handling middleware with consistent API exceptions.
 
+### Admin seed endpoint
+
+The initial admin seed endpoint exists to bootstrap local development environments and is intentionally restricted.
+
+- Endpoint: `POST /api/auth/seed`
+- Availability: Development environment only (`ASPNETCORE_ENVIRONMENT=Development`)
+- Required header: `X-Seed-Token: <SEED_ADMIN_TOKEN>`
+
+If the app is not running in Development, the endpoint responds as not found. If `SEED_ADMIN_TOKEN` is not configured, the endpoint is disabled.
+
+Example:
+
+```bash
+curl -X POST "http://localhost:8080/api/auth/seed" \
+	-H "X-Seed-Token: replace-with-your-token"
+```
+
+Seed credentials (`SEED_ADMIN_USERNAME`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, `SEED_ADMIN_ROLE`) are optional for Production startup because the endpoint is disabled outside Development. If you invoke seeding in Development, these values (or Development defaults) must be available.
+
+### Automatic startup seeding
+
+The backend can run idempotent admin seeding automatically during startup.
+
+- Toggle: `SEED_ADMIN_ON_STARTUP=true`
+- Behavior: each instance attempts seeding during startup; if the admin already exists, startup continues without changes.
+- Safety: duplicate identity/profile conflicts are treated as concurrent-seed races and re-checked before failing.
+
+Recommended rollout:
+
+1. First production deployment: set `SEED_ADMIN_ON_STARTUP=true` and provide `SEED_ADMIN_USERNAME`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, and `SEED_ADMIN_ROLE`.
+2. After the admin is confirmed: set `SEED_ADMIN_ON_STARTUP=false` for steady-state deployments.
+
 ### Architectural shape
 
 - Controllers handle HTTP contract and authorization.

@@ -3,6 +3,9 @@ public sealed class AuthService(
     ISupabaseAuthGateway supabaseAuthGateway,
     ApplicationOptions applicationOptions) : IAuthService
 {
+    private const int SeedConsistencyAttempts = 3;
+    private static readonly TimeSpan SeedConsistencyRetryDelay = TimeSpan.FromMilliseconds(100);
+
     public async Task<LoginResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
@@ -37,8 +40,9 @@ public sealed class AuthService(
 
     public async Task SeedAdminAsync(CancellationToken cancellationToken = default)
     {
-        var existing = await authRepository.GetByUsernameAsync(applicationOptions.SeedAdminUsername, cancellationToken);
-        if (existing is not null)
+        EnsureSeedConfiguration();
+
+        if (await HasSeededAdminAsync(cancellationToken))
         {
             return;
         }
@@ -48,14 +52,27 @@ public sealed class AuthService(
             throw new ApiException("SEED_ADMIN_ROLE must be a valid role.", StatusCodes.Status500InternalServerError);
         }
 
-        var authUser = await supabaseAuthGateway.CreateUserAsync(
-            applicationOptions.SeedAdminEmail,
-            applicationOptions.SeedAdminPassword,
-            new Dictionary<string, object>
+        Supabase.Gotrue.User authUser;
+        try
+        {
+            authUser = await supabaseAuthGateway.CreateUserAsync(
+                applicationOptions.SeedAdminEmail,
+                applicationOptions.SeedAdminPassword,
+                new Dictionary<string, object>
+                {
+                    ["username"] = applicationOptions.SeedAdminUsername,
+                    ["role"] = applicationOptions.SeedAdminRole
+                });
+        }
+        catch (Exception exception) when (IsLikelyDuplicateException(exception))
+        {
+            if (await WaitForSeededAdminAsync(cancellationToken))
             {
-                ["username"] = applicationOptions.SeedAdminUsername,
-                ["role"] = applicationOptions.SeedAdminRole
-            });
+                return;
+            }
+
+            throw new ApiException("Admin seed identity already exists but profile is not available.", StatusCodes.Status500InternalServerError);
+        }
 
         if (string.IsNullOrWhiteSpace(authUser.Id))
         {
@@ -70,6 +87,87 @@ public sealed class AuthService(
             Role = applicationOptions.SeedAdminRole
         };
 
-        await authRepository.CreateAsync(admin, cancellationToken);
+        try
+        {
+            await authRepository.CreateAsync(admin, cancellationToken);
+        }
+        catch (Exception exception) when (IsLikelyDuplicateException(exception))
+        {
+            if (await WaitForSeededAdminAsync(cancellationToken))
+            {
+                return;
+            }
+
+            await TryDeleteAuthUserAsync(authUser.Id);
+            throw;
+        }
+        catch
+        {
+            await TryDeleteAuthUserAsync(authUser.Id);
+
+            throw;
+        }
+    }
+
+    private void EnsureSeedConfiguration()
+    {
+        if (string.IsNullOrWhiteSpace(applicationOptions.SeedAdminUsername)
+            || string.IsNullOrWhiteSpace(applicationOptions.SeedAdminEmail)
+            || string.IsNullOrWhiteSpace(applicationOptions.SeedAdminPassword)
+            || string.IsNullOrWhiteSpace(applicationOptions.SeedAdminRole))
+        {
+            throw new ApiException("Seed admin configuration is incomplete.", StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    private async Task<bool> HasSeededAdminAsync(CancellationToken cancellationToken)
+    {
+        var byUsername = await authRepository.GetByUsernameAsync(applicationOptions.SeedAdminUsername, cancellationToken);
+        if (byUsername is not null)
+        {
+            return true;
+        }
+
+        var byEmail = await authRepository.GetByEmailAsync(applicationOptions.SeedAdminEmail, cancellationToken);
+        return byEmail is not null;
+    }
+
+    private async Task<bool> WaitForSeededAdminAsync(CancellationToken cancellationToken)
+    {
+        for (var attempt = 0; attempt < SeedConsistencyAttempts; attempt++)
+        {
+            if (await HasSeededAdminAsync(cancellationToken))
+            {
+                return true;
+            }
+
+            if (attempt < SeedConsistencyAttempts - 1)
+            {
+                await Task.Delay(SeedConsistencyRetryDelay, cancellationToken);
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsLikelyDuplicateException(Exception exception)
+    {
+        var details = exception.ToString();
+        return details.Contains("duplicate", StringComparison.OrdinalIgnoreCase)
+            || details.Contains("already exists", StringComparison.OrdinalIgnoreCase)
+            || details.Contains("already registered", StringComparison.OrdinalIgnoreCase)
+            || details.Contains("23505", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task TryDeleteAuthUserAsync(string authUserId)
+    {
+        try
+        {
+            await supabaseAuthGateway.DeleteUserAsync(authUserId);
+        }
+        catch
+        {
+            // Keep the original failure when rollback cleanup also fails.
+        }
     }
 }
