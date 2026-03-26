@@ -1,0 +1,54 @@
+name: Backend CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "**"
+    paths:
+      - "backend/backend/**"
+      - "backend/backend.Tests/**"
+      - "backend/backend.sln"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    branches:
+      - "**"
+    paths:
+      - "backend/backend/**"
+      - "backend/backend.Tests/**"
+      - "backend/backend.sln"
+      - ".github/workflows/backend-ci.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore backend.sln
+
+      - name: Verify formatting
+        run: dotnet format backend.sln --verify-no-changes --verbosity minimal
+
+      - name: Build
+        run: dotnet build backend.sln --no-restore --configuration Release -warnaserror -p:ContinuousIntegrationBuild=true
+
+      - name: Run tests
+        run: dotnet test backend.Tests/backend.Tests.csproj --no-build --configuration Release --verbosity normal
