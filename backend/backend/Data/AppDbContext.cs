@@ -1,9 +1,9 @@
 public sealed class AppDbContext
 {
-	public Supabase.Client Client { get; }
+    public Supabase.Client Client { get; }
 
-	public AppDbContext(Supabase.Client client)
-	{
-		Client = client;
-	}
+    public AppDbContext(Supabase.Client client)
+    {
+        Client = client;
+    }
 }

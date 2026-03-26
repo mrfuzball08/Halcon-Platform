@@ -1,4 +1,4 @@
 public interface IPublicService
 {
-	Task<PublicOrderTrackResponse> TrackAsync(string invoice, string customer, CancellationToken cancellationToken = default);
+    Task<PublicOrderTrackResponse> TrackAsync(string invoice, string customer, CancellationToken cancellationToken = default);
 }

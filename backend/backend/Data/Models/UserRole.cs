@@ -1,8 +1,8 @@
 public enum UserRole
 {
-	ADMIN,
-	SALES,
-	PURCHASING,
-	WAREHOUSE,
-	ROUTE
+    ADMIN,
+    SALES,
+    PURCHASING,
+    WAREHOUSE,
+    ROUTE
 }
