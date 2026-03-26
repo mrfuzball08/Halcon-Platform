@@ -12,18 +12,22 @@ export type OrderStatus = "ORDERED" | "IN_PROCESS" | "IN_ROUTE" | "DELIVERED";
 
 export interface User {
   id: number;
+  authUserId?: string;
   username: string;
+  email?: string;
   role: UserRole;
 }
 
 export interface UserCreatePayload {
   username: string;
+  email?: string;
   password: string;
   role: UserRole;
 }
 
 export interface UserUpdatePayload {
   username?: string;
+  email?: string;
   password?: string;
   role?: UserRole;
 }
@@ -82,10 +86,18 @@ export interface LoginResponse {
 
 export interface DecodedToken {
   sub: string;
-  username: string;
-  role: UserRole;
+  username?: string;
+  role?: string;
+  email?: string;
+  user_metadata?: {
+    username?: string;
+    role?: UserRole;
+  };
+  app_metadata?: {
+    role?: string;
+  };
   exp: number;
-  iat: number;
+  iat?: number;
 }
 
 // --- Public ---
