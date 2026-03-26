@@ -135,6 +135,7 @@ export default function HomePage() {
                     <div className="space-y-2">
                       <p className="field-label">Delivery Evidence</p>
                       <div className="rounded-xl overflow-hidden border border-[rgba(255,255,255,0.1)]">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={result.deliveryPhotoUrl} alt="Delivery evidence" className="w-full h-48 object-cover" />
                       </div>
                     </div>

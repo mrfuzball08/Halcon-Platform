@@ -1,6 +1,6 @@
 "use client";
 
-import { ORDER_STATUS_SEQUENCE, STATUS_LABELS, STATUS_COLORS } from "@/lib/types";
+import { ORDER_STATUS_SEQUENCE, STATUS_LABELS } from "@/lib/types";
 import type { OrderStatus } from "@/lib/types";
 
 const STATUS_STYLES: Record<OrderStatus, string> = {
