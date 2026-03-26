@@ -26,6 +26,7 @@ export function PhotoUpload({ label, existingUrl, onUpload, disabled }: PhotoUpl
 
       {preview ? (
         <div className="relative group rounded-lg overflow-hidden border border-border">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={preview} alt={label} className="w-full h-48 object-cover" />
           {!disabled && (
             <button
