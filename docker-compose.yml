@@ -4,36 +4,31 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://api:5000/api
-      - NEXT_PUBLIC_MOCK_AUTH=true
-    depends_on: []
-    # Future: uncomment when .NET API is ready
-    # depends_on:
-    #   - api
-    #
-    # api:
-    #   build:
-    #     context: ./backend
-    #     dockerfile: Dockerfile
-    #   ports:
-    #     - "5000:5000"
-    #   environment:
-    #     - ConnectionStrings__Default=Host=db;Database=halcon;Username=postgres;Password=postgres
-    #   depends_on:
-    #     - db
-    #
-    # db:
-    #   image: postgres:16-alpine
-    #   environment:
-    #     POSTGRES_USER: postgres
-    #     POSTGRES_PASSWORD: postgres
-    #     POSTGRES_DB: halcon
-    #   ports:
-    #     - "5432:5432"
-    #   volumes:
-    #     - pgdata:/var/lib/postgresql/data
-    #
-    # volumes:
-    #   pgdata:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_MOCK_AUTH: ${NEXT_PUBLIC_MOCK_AUTH}
+    depends_on:
+      - api
+
+  api:
+    build:
+      context: ./backend/backend
+      dockerfile: Dockerfile
+    ports:
+      - "${API_PORT:-8080}:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      ASPNETCORE_URLS: ${ASPNETCORE_URLS}
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      SUPABASE_SCHEMA: ${SUPABASE_SCHEMA}
+      SUPABASE_STORAGE_BUCKET: ${SUPABASE_STORAGE_BUCKET}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN}
+      SEED_ADMIN_ON_STARTUP: ${SEED_ADMIN_ON_STARTUP}
+      SEED_ADMIN_USERNAME: ${SEED_ADMIN_USERNAME}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD}
+      SEED_ADMIN_ROLE: ${SEED_ADMIN_ROLE}
+      SEED_ADMIN_TOKEN: ${SEED_ADMIN_TOKEN}
