@@ -115,14 +115,6 @@ export const authApi = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-
-  seed: (seedToken: string) =>
-    request<void>("/auth/seed", {
-      method: "POST",
-      headers: {
-        "X-Seed-Token": seedToken,
-      },
-    }),
 };
 
 // --- Users ---
