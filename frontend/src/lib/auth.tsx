@@ -87,16 +87,33 @@ function isTokenExpired(decoded: DecodedToken): boolean {
   return decoded.exp * 1000 < Date.now();
 }
 
-function extractRole(decoded: DecodedToken): UserRole | null {
-  const candidate = decoded.user_metadata?.role ?? decoded.role;
+function normalizeRole(candidate?: string | null): UserRole | null {
   if (!candidate) return null;
 
   const normalized = candidate.toUpperCase() as UserRole;
   return VALID_ROLES.includes(normalized) ? normalized : null;
 }
 
-function mapTokenToUser(decoded: DecodedToken): User | null {
-  const role = extractRole(decoded);
+function extractRole(decoded: DecodedToken, fallbackRole?: string): UserRole | null {
+  const candidates = [
+    decoded.user_metadata?.role,
+    decoded.role,
+    decoded.app_metadata?.role,
+    fallbackRole,
+  ];
+
+  for (const candidate of candidates) {
+    const normalized = normalizeRole(candidate);
+    if (normalized) {
+      return normalized;
+    }
+  }
+
+  return null;
+}
+
+function mapTokenToUser(decoded: DecodedToken, fallbackRole?: string): User | null {
+  const role = extractRole(decoded, fallbackRole);
   if (!role) {
     return null;
   }
@@ -167,12 +184,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const { token } = await authApi.login(payload);
+    const { token, role } = await authApi.login(payload);
     localStorage.setItem(TOKEN_STORAGE_KEY, token);
     const decoded = decodeJwt(token);
     if (!decoded) throw { message: "Invalid token received", statusCode: 500 };
 
-    const mappedUser = mapTokenToUser(decoded);
+    const mappedUser = mapTokenToUser(decoded, role);
     if (!mappedUser) {
       localStorage.removeItem(TOKEN_STORAGE_KEY);
       throw { message: "Token does not include a valid Halcon role", statusCode: 401 };

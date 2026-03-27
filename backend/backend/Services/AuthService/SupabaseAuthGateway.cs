@@ -1,6 +1,17 @@
 public sealed class SupabaseAuthGateway(SupabaseAppOptions supabaseOptions) : ISupabaseAuthGateway
 {
-    private readonly Supabase.Gotrue.StatelessClient _client = new();
+    private readonly Supabase.Gotrue.Client _authClient = new(
+        new Supabase.Gotrue.ClientOptions
+        {
+            Url = $"{supabaseOptions.Url.TrimEnd('/')}/auth/v1",
+            AutoRefreshToken = false,
+            AllowUnconfirmedUserSessions = true,
+            Headers = new Dictionary<string, string>
+            {
+                ["apikey"] = supabaseOptions.AnonKey
+            }
+        });
+
     private readonly Supabase.Gotrue.AdminClient _adminClient = new(
         supabaseOptions.ServiceRoleKey,
         new Supabase.Gotrue.ClientOptions
@@ -12,15 +23,9 @@ public sealed class SupabaseAuthGateway(SupabaseAppOptions supabaseOptions) : IS
             }
         });
 
-    private readonly Supabase.Gotrue.StatelessClient.StatelessClientOptions _options = new()
-    {
-        Url = $"{supabaseOptions.Url.TrimEnd('/')}/auth/v1",
-        AllowUnconfirmedUserSessions = true
-    };
-
     public async Task<Supabase.Gotrue.Session> SignInWithPasswordAsync(string email, string password)
     {
-        var session = await _client.SignIn(email, password, _options);
+        var session = await _authClient.SignIn(email, password);
         if (session is null)
         {
             throw new ApiException("Supabase login failed.", StatusCodes.Status401Unauthorized);

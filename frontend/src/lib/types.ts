@@ -82,6 +82,7 @@ export interface LoginPayload {
 
 export interface LoginResponse {
   token: string;
+  role: UserRole;
 }
 
 export interface DecodedToken {

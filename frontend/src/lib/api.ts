@@ -23,7 +23,7 @@ import type {
 } from "./types";
 
 const TOKEN_STORAGE_KEY = "halcon_token";
-const RAW_API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api";
+const RAW_API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001/api";
 const API_BASE = RAW_API_BASE.replace(/\/+$/, "");
 
 // --- Helpers ---
@@ -110,11 +110,22 @@ async function request<T>(
 // --- Auth ---
 
 export const authApi = {
-  login: (payload: LoginPayload) =>
-    request<LoginResponse>("/auth/login", {
+  login: async (payload: LoginPayload): Promise<LoginResponse> => {
+    const response = await request<{
+      token?: string;
+      Token?: string;
+      role?: string;
+      Role?: string;
+    }>("/auth/login", {
       method: "POST",
       body: JSON.stringify(payload),
-    }),
+    });
+
+    return {
+      token: response.token ?? response.Token ?? "",
+      role: (response.role ?? response.Role ?? "").toUpperCase() as LoginResponse["role"],
+    };
+  },
 };
 
 // --- Users ---

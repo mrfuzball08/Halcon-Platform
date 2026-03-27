@@ -16,7 +16,7 @@ public sealed class AuthService(
         var user = await authRepository.GetByUsernameAsync(request.Username, cancellationToken);
         if (user is null)
         {
-            throw new ApiException("Invalid credentials.", StatusCodes.Status401Unauthorized);
+            throw new ApiException("[GetByUsernameAsync] Invalid credentials.", StatusCodes.Status401Unauthorized);
         }
 
         try
@@ -29,12 +29,13 @@ public sealed class AuthService(
 
             return new LoginResponse
             {
-                Token = session.AccessToken
+                Token = session.AccessToken,
+                Role = user.Role
             };
         }
         catch
         {
-            throw new ApiException("Invalid credentials.", StatusCodes.Status401Unauthorized);
+            throw new ApiException($"[SignInWithPasswordAsync] Invalid credentials.", StatusCodes.Status401Unauthorized);
         }
     }
 
