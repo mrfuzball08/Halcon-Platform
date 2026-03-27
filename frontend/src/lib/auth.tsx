@@ -23,6 +23,9 @@ import {
 import type { User, UserRole, DecodedToken, LoginPayload } from "./types";
 import { authApi } from "./api";
 
+const TOKEN_STORAGE_KEY = "halcon_token";
+const VALID_ROLES: UserRole[] = ["ADMIN", "SALES", "PURCHASING", "WAREHOUSE", "ROUTE"];
+
 // --- Mock Data ---
 
 const MOCK_USERS: Record<string, { password: string; user: User }> = {
@@ -69,7 +72,11 @@ const AuthContext = createContext<AuthContextType | null>(null);
 function decodeJwt(token: string): DecodedToken | null {
   try {
     const payload = token.split(".")[1];
-    const decoded = JSON.parse(atob(payload));
+    if (!payload) return null;
+
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
+    const decoded = JSON.parse(atob(padded));
     return decoded;
   } catch {
     return null;
@@ -78,6 +85,55 @@ function decodeJwt(token: string): DecodedToken | null {
 
 function isTokenExpired(decoded: DecodedToken): boolean {
   return decoded.exp * 1000 < Date.now();
+}
+
+function normalizeRole(candidate?: string | null): UserRole | null {
+  if (!candidate) return null;
+
+  const normalized = candidate.toUpperCase() as UserRole;
+  return VALID_ROLES.includes(normalized) ? normalized : null;
+}
+
+function extractRole(decoded: DecodedToken, fallbackRole?: string): UserRole | null {
+  const candidates = [
+    decoded.user_metadata?.role,
+    decoded.role,
+    decoded.app_metadata?.role,
+    fallbackRole,
+  ];
+
+  for (const candidate of candidates) {
+    const normalized = normalizeRole(candidate);
+    if (normalized) {
+      return normalized;
+    }
+  }
+
+  return null;
+}
+
+function mapTokenToUser(decoded: DecodedToken, fallbackRole?: string): User | null {
+  const role = extractRole(decoded, fallbackRole);
+  if (!role) {
+    return null;
+  }
+
+  const username =
+    decoded.user_metadata?.username ??
+    decoded.username ??
+    decoded.email?.split("@")[0] ??
+    "user";
+
+  const parsedId = Number.parseInt(decoded.sub, 10);
+  const id = Number.isNaN(parsedId) ? 0 : parsedId;
+
+  return {
+    id,
+    authUserId: decoded.sub,
+    username,
+    email: decoded.email,
+    role,
+  };
 }
 
 // --- Provider ---
@@ -99,17 +155,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     } else {
-      const token = localStorage.getItem("halcon_token");
+      const token = localStorage.getItem(TOKEN_STORAGE_KEY);
       if (token) {
         const decoded = decodeJwt(token);
         if (decoded && !isTokenExpired(decoded)) {
-          setUser({
-            id: parseInt(decoded.sub),
-            username: decoded.username,
-            role: decoded.role,
-          });
+          const mappedUser = mapTokenToUser(decoded);
+          if (mappedUser) {
+            setUser(mappedUser);
+          } else {
+            localStorage.removeItem(TOKEN_STORAGE_KEY);
+          }
         } else {
-          localStorage.removeItem("halcon_token");
+          localStorage.removeItem(TOKEN_STORAGE_KEY);
         }
       }
     }
@@ -127,20 +184,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const { token } = await authApi.login(payload);
-    localStorage.setItem("halcon_token", token);
+    const { token, role } = await authApi.login(payload);
+    localStorage.setItem(TOKEN_STORAGE_KEY, token);
     const decoded = decodeJwt(token);
     if (!decoded) throw { message: "Invalid token received", statusCode: 500 };
-    setUser({
-      id: parseInt(decoded.sub),
-      username: decoded.username,
-      role: decoded.role,
-    });
+
+    const mappedUser = mapTokenToUser(decoded, role);
+    if (!mappedUser) {
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      throw { message: "Token does not include a valid Halcon role", statusCode: 401 };
+    }
+
+    setUser(mappedUser);
   }, []);
 
   const logout = useCallback(() => {
     setUser(null);
-    localStorage.removeItem("halcon_token");
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
     localStorage.removeItem("halcon_mock_user");
   }, []);
 

@@ -50,8 +50,7 @@ public sealed class AuthServiceTests
             SeedAdminUsername = "admin",
             SeedAdminEmail = string.Empty,
             SeedAdminPassword = "Admin123!",
-            SeedAdminRole = nameof(UserRole.ADMIN),
-            SeedAdminToken = "seed-token"
+            SeedAdminRole = nameof(UserRole.ADMIN)
         };
 
         var service = new AuthService(repository, gateway, options);
@@ -70,8 +69,7 @@ public sealed class AuthServiceTests
             SeedAdminUsername = "admin",
             SeedAdminEmail = "admin@halcon.local",
             SeedAdminPassword = "Admin123!",
-            SeedAdminRole = nameof(UserRole.ADMIN),
-            SeedAdminToken = "seed-token"
+            SeedAdminRole = nameof(UserRole.ADMIN)
         };
     }
 

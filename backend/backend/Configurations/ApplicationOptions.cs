@@ -6,5 +6,4 @@ public sealed class ApplicationOptions
     public required string SeedAdminEmail { get; init; }
     public required string SeedAdminPassword { get; init; }
     public required string SeedAdminRole { get; init; }
-    public string? SeedAdminToken { get; init; }
 }

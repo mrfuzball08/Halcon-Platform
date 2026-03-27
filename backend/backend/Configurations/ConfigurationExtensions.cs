@@ -21,8 +21,7 @@ public static class ConfigurationExtensions
             SeedAdminUsername = configuration.SeedValue("SEED_ADMIN_USERNAME", "admin", isDevelopment),
             SeedAdminEmail = configuration.SeedValue("SEED_ADMIN_EMAIL", "admin@halcon.local", isDevelopment),
             SeedAdminPassword = configuration.SeedValue("SEED_ADMIN_PASSWORD", "Admin123!", isDevelopment),
-            SeedAdminRole = configuration.SeedValue("SEED_ADMIN_ROLE", "ADMIN", isDevelopment),
-            SeedAdminToken = configuration["SEED_ADMIN_TOKEN"]
+            SeedAdminRole = configuration.SeedValue("SEED_ADMIN_ROLE", "ADMIN", isDevelopment)
         };
     }
 

@@ -4,7 +4,7 @@
 // Centralised HTTP client for the .NET backend API.
 //
 // SWITCHING FROM MOCK TO REAL API:
-// 1. Set NEXT_PUBLIC_API_URL to your .NET API base URL (e.g. http://api:5000/api)
+// 1. Set NEXT_PUBLIC_API_URL to your .NET API base URL (e.g. http://localhost:8080/api)
 // 2. Set NEXT_PUBLIC_MOCK_AUTH=false (or remove it)
 // 3. That's it — all endpoints are already wired up.
 // ============================================================
@@ -22,14 +22,59 @@ import type {
   PublicOrderTrack,
 } from "./types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
+const TOKEN_STORAGE_KEY = "halcon_token";
+const RAW_API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001/api";
+const API_BASE = RAW_API_BASE.replace(/\/+$/, "");
 
 // --- Helpers ---
 
 function getAuthHeaders(): Record<string, string> {
   if (typeof window === "undefined") return {};
-  const token = localStorage.getItem("halcon_token");
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY);
   return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function normalizeUserCreatePayload(payload: UserCreatePayload): UserCreatePayload & { email: string } {
+  if (payload.email?.trim()) {
+    return { ...payload, email: payload.email.trim() };
+  }
+
+  const sanitizedLocalPart = payload.username
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  const fallbackEmail = `${sanitizedLocalPart || "user"}@halcon.local`;
+  return { ...payload, email: fallbackEmail };
+}
+
+function parseApiError(statusCode: number, bodyText: string): { message: string; statusCode: number } {
+  if (!bodyText) {
+    return {
+      message: `Request failed with status ${statusCode}.`,
+      statusCode,
+    };
+  }
+
+  try {
+    const parsed = JSON.parse(bodyText) as {
+      message?: string;
+      Message?: string;
+      statusCode?: number;
+      StatusCode?: number;
+    };
+
+    return {
+      message: parsed.message ?? parsed.Message ?? bodyText,
+      statusCode: parsed.statusCode ?? parsed.StatusCode ?? statusCode,
+    };
+  } catch {
+    return {
+      message: bodyText,
+      statusCode,
+    };
+  }
 }
 
 async function request<T>(
@@ -39,6 +84,7 @@ async function request<T>(
   const url = `${API_BASE}${endpoint}`;
 
   const headers: Record<string, string> = {
+    Accept: "application/json",
     ...getAuthHeaders(),
     ...(options.headers as Record<string, string>),
   };
@@ -51,11 +97,8 @@ async function request<T>(
   const res = await fetch(url, { ...options, headers });
 
   if (!res.ok) {
-    const errorBody = await res.text().catch(() => "Unknown error");
-    throw {
-      message: errorBody,
-      statusCode: res.status,
-    };
+    const errorBody = await res.text().catch(() => "");
+    throw parseApiError(res.status, errorBody);
   }
 
   // Handle 204 No Content
@@ -67,14 +110,22 @@ async function request<T>(
 // --- Auth ---
 
 export const authApi = {
-  login: (payload: LoginPayload) =>
-    request<LoginResponse>("/auth/login", {
+  login: async (payload: LoginPayload): Promise<LoginResponse> => {
+    const response = await request<{
+      token?: string;
+      Token?: string;
+      role?: string;
+      Role?: string;
+    }>("/auth/login", {
       method: "POST",
       body: JSON.stringify(payload),
-    }),
+    });
 
-  seed: () =>
-    request<void>("/auth/seed", { method: "POST" }),
+    return {
+      token: response.token ?? response.Token ?? "",
+      role: (response.role ?? response.Role ?? "").toUpperCase() as LoginResponse["role"],
+    };
+  },
 };
 
 // --- Users ---
@@ -87,7 +138,7 @@ export const usersApi = {
   create: (payload: UserCreatePayload) =>
     request<User>("/users", {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: JSON.stringify(normalizeUserCreatePayload(payload)),
     }),
 
   update: (id: number, payload: UserUpdatePayload) =>
@@ -127,7 +178,7 @@ export const ordersApi = {
       body: JSON.stringify(payload),
     }),
 
-  updateStatus: (id: number, status: string) =>
+  updateStatus: (id: number, status: Order["status"]) =>
     request<Order>(`/orders/${id}/status`, {
       method: "PATCH",
       body: JSON.stringify({ status }),
