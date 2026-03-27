@@ -1,0 +1,42 @@
+name: Seed Demo Data
+
+on:
+  workflow_dispatch:
+    inputs:
+      orders:
+        description: "Number of demo orders to insert"
+        required: true
+        default: "250"
+      profiles:
+        description: "Number of demo profiles to insert from auth.users without profile"
+        required: true
+        default: "25"
+
+jobs:
+  seed:
+    name: Seed Database
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore backend/backend.DataGenerator/backend.DataGenerator.csproj
+
+      - name: Seed demo data
+        run: >-
+          dotnet run
+          --project backend/backend.DataGenerator/backend.DataGenerator.csproj
+          --configuration Release
+          -- seed
+          --orders ${{ inputs.orders }}
+          --profiles ${{ inputs.profiles }}
+        env:
+          MIGRATIONS_DB_CONNECTION: ${{ secrets.MIGRATIONS_DB_CONNECTION }}
