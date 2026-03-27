@@ -1,6 +1,16 @@
 public sealed class SupabaseAuthGateway(SupabaseAppOptions supabaseOptions) : ISupabaseAuthGateway
 {
     private readonly Supabase.Gotrue.StatelessClient _client = new();
+    private readonly Supabase.Gotrue.AdminClient _adminClient = new(
+        supabaseOptions.ServiceRoleKey,
+        new Supabase.Gotrue.ClientOptions
+        {
+            Url = $"{supabaseOptions.Url.TrimEnd('/')}/auth/v1",
+            Headers = new Dictionary<string, string>
+            {
+                ["apikey"] = supabaseOptions.ServiceRoleKey
+            }
+        });
 
     private readonly Supabase.Gotrue.StatelessClient.StatelessClientOptions _options = new()
     {
@@ -21,9 +31,7 @@ public sealed class SupabaseAuthGateway(SupabaseAppOptions supabaseOptions) : IS
 
     public async Task<Supabase.Gotrue.User> CreateUserAsync(string email, string password, IDictionary<string, object>? userMetadata = null)
     {
-        var user = await _client.CreateUser(
-            supabaseOptions.ServiceRoleKey,
-            _options,
+        var user = await _adminClient.CreateUser(
             email,
             password,
             new Supabase.Gotrue.AdminUserAttributes
@@ -44,9 +52,7 @@ public sealed class SupabaseAuthGateway(SupabaseAppOptions supabaseOptions) : IS
 
     public async Task<Supabase.Gotrue.User> UpdateUserByIdAsync(string authUserId, string? email = null, string? password = null)
     {
-        var user = await _client.UpdateUserById(
-            supabaseOptions.ServiceRoleKey,
-            _options,
+        var user = await _adminClient.UpdateUserById(
             authUserId,
             new Supabase.Gotrue.AdminUserAttributes
             {
@@ -65,6 +71,6 @@ public sealed class SupabaseAuthGateway(SupabaseAppOptions supabaseOptions) : IS
 
     public async Task DeleteUserAsync(string authUserId)
     {
-        await _client.DeleteUser(authUserId, supabaseOptions.ServiceRoleKey, _options);
+        await _adminClient.DeleteUser(authUserId);
     }
 }
