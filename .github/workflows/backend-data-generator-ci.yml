@@ -1,0 +1,49 @@
+name: Backend Data Generator CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "**"
+    paths:
+      - "backend/backend.DataGenerator/**"
+      - "backend/backend.Migrations/**"
+      - ".github/workflows/backend-data-generator-ci.yml"
+  pull_request:
+    branches:
+      - "**"
+    paths:
+      - "backend/backend.DataGenerator/**"
+      - "backend/backend.Migrations/**"
+      - ".github/workflows/backend-data-generator-ci.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build Generator
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore backend.DataGenerator/backend.DataGenerator.csproj
+
+      - name: Verify formatting
+        run: dotnet format backend.DataGenerator/backend.DataGenerator.csproj --verify-no-changes --verbosity minimal
+
+      - name: Build
+        run: dotnet build backend.DataGenerator/backend.DataGenerator.csproj --no-restore --configuration Release -warnaserror -p:ContinuousIntegrationBuild=true

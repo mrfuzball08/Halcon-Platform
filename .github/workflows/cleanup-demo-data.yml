@@ -1,0 +1,31 @@
+name: Cleanup Demo Data
+
+on:
+  workflow_dispatch: 
+
+jobs:
+  cleanup:
+    name: Cleanup Database
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore backend/backend.DataGenerator/backend.DataGenerator.csproj
+
+      - name: Cleanup demo data
+        run: >-
+          dotnet run
+          --project backend/backend.DataGenerator/backend.DataGenerator.csproj
+          --configuration Release
+          -- cleanup
+        env:
+          MIGRATIONS_DB_CONNECTION: ${{ secrets.MIGRATIONS_DB_CONNECTION }}
