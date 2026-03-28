@@ -30,6 +30,7 @@ public static class DependencyInjection
             {
                 options.Authority = supabaseOptions.AuthUrl;
                 options.RequireHttpsMetadata = !environment.IsDevelopment();
+                options.MapInboundClaims = false;
                 options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
                 {
                     ValidateIssuer = true,
@@ -41,6 +42,12 @@ public static class DependencyInjection
 
                 options.Events = new JwtBearerEvents
                 {
+                    OnAuthenticationFailed = context =>
+                    {
+                        var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("JwtAuth");
+                        logger.LogError(context.Exception, "JWT authentication failed: {Message}", context.Exception.Message);
+                        return Task.CompletedTask;
+                    },
                     OnTokenValidated = async context =>
                     {
                         var authUserId = context.Principal?.FindFirstValue("sub");
