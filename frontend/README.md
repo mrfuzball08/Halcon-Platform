@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Halcon Platform - Frontend
 
-## Getting Started
+This is the Next.js frontend application for the **Halcon Platform**, designed for managing construction material distribution.
 
-First, run the development server:
+## Tech Stack & Specifications
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+*   **Framework**: Next.js 16 (App Router)
+*   **Runtime & Package Manager**: Bun
+*   **Language**: TypeScript
+*   **Styling**: Tailwind CSS v4 (Custom configured for enterprise UI)
+*   **Icons**: SVG components natively embedded (e.g., `<Logo />`)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Design Aesthetic & Theme
+The frontend completely abandons generic, bright layouts. It employs a **"ChatGPT-dark"** premium enterprise interface.
+- **Color Palette**: Backgrounds ranging from pure dark `#171717` to elevated surface panels like `#212121`.
+- **Accents**: Deep, muted teal (`#10a37f` for primary actions) alongside `#ef4444` (`red-500`) for destructive actions.
+- **Micro-interactions**: Hover effects, glow states, transparent borders (`rgba(255,255,255,0.08)`), and crisp tracking for visual density.
+- **Typography**: Strictly optimized system fonts (`Geist`, sans and mono) emphasizing numerical legibility for inventory and order numbers.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Features & Implementation Details
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Role-Based Access Control (RBAC)
+User authorization operates at both the component level and route level:
+- `useAuth`: A custom hook that consumes JWT tokens and dynamically checks roles like `hasRole("ADMIN", "WAREHOUSE")`.
+- UI Elements (like the "Edit Order" modal or "Advance Status" panel) are hidden or shown conditionally based on the user's role.
 
-## Learn More
+### Image & Evidence Handling
+- Uses the `FormData` interface to seamlessly submit unstructured image blobs (for loading and delivery proof) directly to the `.NET` backend.
+- Displays cross-domain `url` resources originating from the cloud storage bucket via `<img>` with specific Next.js optimizations turned off to allow rapid, unrestricted UI mounting.
 
-To learn more about Next.js, take a look at the following resources:
+### Centralized API Integration (`lib/api.ts`)
+The entire application proxies HTTP requests through a heavily centralized `request()` helper within `lib/api.ts`:
+- **Auth Token Injection**: Automatically retrieves `halcon_token` from `localStorage` and appends it to outgoing requests.
+- **Response Handling**: Seamlessly unpacks `.NET` server errors and standardizes `StatusCode` data structures.
+- **Mock Fallback System**: Implements a zero-migration toggle: turning on the `NEXT_PUBLIC_MOCK_AUTH=true` system variable totally bypasses live backend fetches by loading `lib/mock-data.ts`, enabling safe frontend UI prototyping.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Available Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Using **Bun**, execute the following essential commands inside the `/frontend` directory:
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `bun dev`: Starts the Next.js hot-reloaded development server locally on port 3000.
+- `bun run build`: Compiles, minifies, and emits a standalone production image.
+- `bun run lint`: Invokes ESLint and strict TypeScript type-checking logic.
