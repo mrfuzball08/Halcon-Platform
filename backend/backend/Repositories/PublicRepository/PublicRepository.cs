@@ -8,7 +8,7 @@ public sealed class PublicRepository(AppDbContext dbContext) : IPublicRepository
             .From<Order>()
             .Filter("invoice_number", Constants.Operator.Equals, invoiceNumber)
             .Filter("customer_number", Constants.Operator.Equals, customerNumber)
-            .Filter("is_deleted", Constants.Operator.Equals, false)
+            .Filter("is_deleted", Constants.Operator.Equals, "false")
             .Limit(1)
             .Get(cancellationToken);
 

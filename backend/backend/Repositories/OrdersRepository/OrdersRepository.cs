@@ -14,7 +14,7 @@ public sealed class OrdersRepository(AppDbContext dbContext) : IOrdersRepository
         IPostgrestTable<Order> query = dbContext.Client
             .From<Order>()
             .Order("created_at", Constants.Ordering.Descending)
-            .Filter("is_deleted", Constants.Operator.Equals, deletedOnly);
+            .Filter("is_deleted", Constants.Operator.Equals, deletedOnly.ToString().ToLowerInvariant());
 
         if (!string.IsNullOrWhiteSpace(invoice))
         {
@@ -23,7 +23,7 @@ public sealed class OrdersRepository(AppDbContext dbContext) : IOrdersRepository
 
         if (!string.IsNullOrWhiteSpace(customer))
         {
-            query = query.Filter("customer_number", Constants.Operator.ILike, $"%{customer}%");
+            query = query.Filter("customer_name", Constants.Operator.ILike, $"%{customer}%");
         }
 
         if (!string.IsNullOrWhiteSpace(status))

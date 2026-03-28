@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { StatusBadge } from "@/components/ui/StatusIndicators";
 import { useAuth } from "@/lib/auth";
@@ -15,20 +15,46 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(!isMockMode);
   const [filters, setFilters] = useState<OrderFilters>({});
 
-  useState(() => {
-    if (!isMockMode) {
-      ordersApi.list(filters).then(setOrders).catch(console.error).finally(() => setLoading(false));
-    }
-  });
+  const fetchOrders = useCallback(
+    (appliedFilters: OrderFilters) => {
+      if (isMockMode) return;
+      setLoading(true);
+      ordersApi
+        .list(appliedFilters)
+        .then(setOrders)
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    },
+    [isMockMode]
+  );
 
-  const filteredOrders = isMockMode
-    ? orders.filter((o) => {
-        if (filters.invoice && !o.invoiceNumber.toLowerCase().includes(filters.invoice.toLowerCase())) return false;
-        if (filters.customer && !o.customerNumber.toLowerCase().includes(filters.customer.toLowerCase()) && !o.customerName.toLowerCase().includes(filters.customer.toLowerCase())) return false;
-        if (filters.status && o.status !== filters.status) return false;
-        return true;
-      })
-    : orders;
+  // Initial fetch
+  useEffect(() => {
+    fetchOrders(filters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMockMode]);
+
+  // Re-fetch when status dropdown changes (instant)
+  function handleStatusChange(status: OrderStatus | undefined) {
+    const next = { ...filters, status };
+    setFilters(next);
+    fetchOrders(next);
+  }
+
+  // Re-fetch on Enter from text inputs
+  function handleSearchKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      fetchOrders(filters);
+    }
+  }
+
+  const filteredOrders = orders.filter((o) => {
+    if (filters.invoice && !o.invoiceNumber.toLowerCase().includes(filters.invoice.toLowerCase())) return false;
+    if (filters.customer && !o.customerName.toLowerCase().includes(filters.customer.toLowerCase())) return false;
+    if (filters.status && o.status !== filters.status) return false;
+    return true;
+  });
 
   async function handleDelete(id: number) {
     if (!confirm("Are you sure you want to delete this order?")) return;
@@ -70,16 +96,18 @@ export default function OrdersPage() {
               placeholder="Search by invoice #..."
               value={filters.invoice ?? ""}
               onChange={(e) => setFilters((f) => ({ ...f, invoice: e.target.value || undefined }))}
+              onKeyDown={handleSearchKeyDown}
               className="input-field"
             />
           </div>
           <div>
-            <label className="field-label">Customer</label>
+            <label className="field-label">Customer Name</label>
             <input
               type="text"
-              placeholder="Search by customer..."
+              placeholder="Search by customer name..."
               value={filters.customer ?? ""}
               onChange={(e) => setFilters((f) => ({ ...f, customer: e.target.value || undefined }))}
+              onKeyDown={handleSearchKeyDown}
               className="input-field"
             />
           </div>
@@ -87,7 +115,7 @@ export default function OrdersPage() {
             <label className="field-label">Status</label>
             <select
               value={filters.status ?? ""}
-              onChange={(e) => setFilters((f) => ({ ...f, status: (e.target.value as OrderStatus) || undefined }))}
+              onChange={(e) => handleStatusChange((e.target.value as OrderStatus) || undefined)}
               className="input-field"
             >
               <option value="">All Statuses</option>
