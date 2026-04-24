@@ -16,7 +16,7 @@ public sealed class AuthService(
         var user = await authRepository.GetByUsernameAsync(request.Username, cancellationToken);
         if (user is null)
         {
-            throw new ApiException("[GetByUsernameAsync] Invalid credentials.", StatusCodes.Status401Unauthorized);
+            throw new ApiException("Invalid credentials.", StatusCodes.Status401Unauthorized);
         }
 
         try

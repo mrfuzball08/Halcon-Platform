@@ -6,14 +6,27 @@ public sealed class ImagesService(
 
     public async Task<OrderResponse> UploadLoadingPhotoAsync(int orderId, IFormFile file, CancellationToken cancellationToken = default)
     {
+        await EnsureOrderIsInRouteAsync(orderId, cancellationToken);
         var photoUrl = await UploadAsync(orderId, file, "loading", cancellationToken);
         return await ordersService.AttachLoadingPhotoAsync(orderId, photoUrl, cancellationToken);
     }
 
     public async Task<OrderResponse> UploadDeliveryPhotoAsync(int orderId, IFormFile file, CancellationToken cancellationToken = default)
     {
+        await EnsureOrderIsInRouteAsync(orderId, cancellationToken);
         var photoUrl = await UploadAsync(orderId, file, "delivery", cancellationToken);
         return await ordersService.AttachDeliveryPhotoAsync(orderId, photoUrl, cancellationToken);
+    }
+
+    private async Task EnsureOrderIsInRouteAsync(int orderId, CancellationToken cancellationToken)
+    {
+        var order = await ordersService.GetAsync(orderId, cancellationToken);
+        if (!string.Equals(order.Status, nameof(OrderStatus.IN_ROUTE), StringComparison.Ordinal))
+        {
+            throw new ApiException(
+                "Photos can only be uploaded when the order status is IN_ROUTE.",
+                StatusCodes.Status400BadRequest);
+        }
     }
 
     private async Task<string> UploadAsync(int orderId, IFormFile file, string type, CancellationToken cancellationToken)

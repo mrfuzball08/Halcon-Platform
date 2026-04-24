@@ -20,7 +20,7 @@ The Backend API is the main application entry point for business operations. It 
 - Role-aware authorization for admin, sales, warehouse, route, and purchasing scenarios.
 - Order management with logical deletion and restore behavior.
 - Public order tracking endpoint for customer visibility.
-- Evidence image handling for loading and delivery stages.
+- Evidence image handling restricted to the IN_ROUTE stage for loading and delivery.
 - Global API error handling middleware with consistent API exceptions.
 
 ### Automatic startup seeding

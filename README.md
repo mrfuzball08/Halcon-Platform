@@ -63,4 +63,4 @@ Access the application UI by visiting `http://localhost:5000`.
 
 - **Role-Based Access Control (RBAC)**: Deeply integrated across both the frontend (UI hiding/showing logic) and backend (endpoint authorization via JWT attributes). Roles include `ADMIN`, `SALES`, `WAREHOUSE`, `ROUTE`, and `PURCHASING`.
 - **JWT Authentication**: User credentials and tokens are processed by Supabase Auth logic underneath. The backend verifies incoming tokens dynamically, allowing stateless execution.
-- **Evidence Handling**: The system requires visual proof of loading and delivery. These workflow images are securely transmitted as standard multipart form data and stored inside a public-read Supabase Storage bucket (`order-evidence`).
+- **Evidence Handling**: The system requires visual proof of loading and delivery. These workflow images are securely transmitted as standard multipart form data and stored inside a public-read Supabase Storage bucket (`order-evidence`). Image uploads are strictly guarded to only occur when an order is in the `IN_ROUTE` status.

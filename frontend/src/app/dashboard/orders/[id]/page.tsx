@@ -198,10 +198,10 @@ export default function OrderDetailPage({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <PhotoUpload label="Loading Photo" existingUrl={order.loadingPhotoUrl}
             onUpload={(file) => handlePhotoUpload("loading", file)}
-            disabled={!hasRole("ROUTE") || order.status === "DELIVERED"} />
+            disabled={!hasRole("ROUTE") || order.status !== "IN_ROUTE"} />
           <PhotoUpload label="Delivery Photo" existingUrl={order.deliveryPhotoUrl}
             onUpload={(file) => handlePhotoUpload("delivery", file)}
-            disabled={!hasRole("ROUTE") || order.status === "DELIVERED"} />
+            disabled={!hasRole("ROUTE") || order.status !== "IN_ROUTE"} />
         </div>
       </div>
 
