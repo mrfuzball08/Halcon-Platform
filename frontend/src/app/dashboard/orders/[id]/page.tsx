@@ -110,7 +110,7 @@ export default function OrderDetailPage({
   const currentStatusIdx = ORDER_STATUS_SEQUENCE.indexOf(order.status);
   const nextStatus: OrderStatus | undefined = ORDER_STATUS_SEQUENCE[currentStatusIdx + 1];
   const canAdvanceStatus =
-    hasRole("ADMIN", "PURCHASING") ||
+    hasRole("ADMIN") ||
     (hasRole("WAREHOUSE") && (order.status === "ORDERED" || order.status === "IN_PROCESS")) ||
     (hasRole("ROUTE") && order.status === "IN_ROUTE");
 

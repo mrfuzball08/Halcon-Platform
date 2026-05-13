@@ -3,6 +3,9 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_MOCK_AUTH: ${NEXT_PUBLIC_MOCK_AUTH}
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     environment:
